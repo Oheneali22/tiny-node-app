@@ -28,3 +28,15 @@ jobs:
 
       - name: Push image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/cbs-app:v1
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cbs-app:v1
+            docker stop cbs-app || true
+            docker rm cbs-app || true
+            docker run -d -p 3000:3000 --name cbs-app ${{ secrets.DOCKERHUB_USERNAME }}/cbs-app:v1
